@@ -16,7 +16,7 @@ var color = d3.scaleLinear()
 
 var pack = d3.pack()
     .size([diameter - margin, diameter - margin])
-    .padding(30);
+    .padding(100);
 
 drawBubbleGraph("datax.json")
 
@@ -26,7 +26,7 @@ function drawBubbleGraph(filename) {
         if (error) throw error;
 
         root = d3.hierarchy(root)
-            .sum(function(d) { return d.request; })
+            .sum(function(d) { return d.CPURequest; })
             .sort(function(a, b) { console.log (b.value + " - " + a.value);return b.value - a.value; });
 
 
@@ -78,9 +78,8 @@ function drawBubbleGraph(filename) {
   function zoomTo(v) {
     var k = diameter / v[2]; view = v;
     node.attr("transform", function(d) { return "translate(" + (d.x - v[0]) * k + "," + (d.y - v[1]) * k + ")"; });
-//    circle.style("fill", function(d) { if (d.parent != null && d.request == 0) { console.log("XXXXX " + d.name); return null;}});//return d3.color("blue");} else {return null;} });
-    circle.attr("r", function(d) { console.log ("ARNO:" + d.data.name + ", req:" + d.data.request); return d.r * k ; })
-//    circle.style("fill", function(d) { console.log ("ARNO:" + d.data.name + ", radius:" + d.r); return d.data.request == 0 ? "blue": "null";});
+    circle.attr("r", function(d) { return d.data.CPURequest == 10 ? 20 * k : d.r * k ; })
+    circle.style("fill", function(d) { console.log ("ARNO:" + d.data.name + ", radius:" + d.r); return d.data.CPURequest == 10 ? "grey": d.children ? color(d.depth) : null;});
   }
  
         let current_circle = undefined;
@@ -121,11 +120,17 @@ function drawBubbleGraph(filename) {
           .text(d => "CPUs: " + d.data.CPUs)
           .attr("y", "32");
         textblock.append("text")
-          .text(d => "CPU Request: " + d.data.request)
+          .text(d => "CPU Request: " + d.data.CPURequest)
           .attr("y", "48");
         textblock.append("text")
-          .text(d => "CPU Limit: " + d.data.limit)
+          .text(d => "CPU Limit: " + d.data.CPULimit)
           .attr("y", "64");
+        textblock.append("text")
+          .text(d => "Memory Request: " + d.data.MemoryRequest)
+          .attr("y", "80");
+        textblock.append("text")
+          .text(d => "Memory Limit: " + d.data.MemoryLimit)
+          .attr("y", "96");
         }
     });
 }
