@@ -43,6 +43,17 @@ function drawBubbleGraph(filename) {
                 .on("mouseout", function(d) {return d.children ? null : clearData(d);})
                 .style("fill", function(d) { return d.children ? color(d.depth) : null; })
 
+        let innercircle = g.selectAll("innercircle")
+          .data(nodes)
+          .enter().append("circle")
+          .attr("class", function(d) { return d.parent ? d.children ? "inner--node" : "inner--leaf" : "inner--root"; })
+
+          let innerleaf = g.selectAll(".inner--leaf")
+              .attr("r", function(d) {if (d.data.CPULimit || d.data.CPURequest) return (d.r * d.data.CPULimit / d.data.CPURequest);})
+              .style("fill-opacity", 0.2)
+              .on("click", function(d) { if (focus !== d) zoom(d), d3.event.stopPropagation(); })
+              .style("fill", "red");
+
         var text = g.selectAll("text")
             .data(nodes)
             .enter().append("text")
@@ -51,7 +62,7 @@ function drawBubbleGraph(filename) {
                 .style("display", function(d) { return d.parent === root ? "inline" : "none"; })
                 .text(function(d) { return d.data.name;});
 
-        var node = g.selectAll("circle,text");
+        var node = g.selectAll("circle,innerleaf,text");
 
     svg
       .style("background", color(-1))
@@ -78,8 +89,11 @@ function drawBubbleGraph(filename) {
   function zoomTo(v) {
     var k = diameter / v[2]; view = v;
     node.attr("transform", function(d) { return "translate(" + (d.x - v[0]) * k + "," + (d.y - v[1]) * k + ")"; });
-    circle.attr("r", function(d) { return d.data.CPURequest == 10 ? 20 * k : d.r * k ; })
-    circle.style("fill", function(d) { console.log ("ARNO:" + d.data.name + ", radius:" + d.r); return d.data.CPURequest == 10 ? "grey": d.children ? color(d.depth) : null;});
+    circle.attr("r", function(d) { if (d.children) return d.r *k; if (d.data.CPULimit && d.data.CPURequest) return d.r * k; else return 20 * k ; })
+    circle.style("fill", function(d) { if (d.children) return color(d.depth); if (!d.data.CPULimit || !d.data.CPURequest)return "grey"; else return color(d.depth);});
+    innerleaf.attr("r", function(d) { if (d.data.CPULimit && d.data.CPURequest) {
+                                        if (d.data.CPULimit == d.data.CPURequest) return d.r  * k;
+                                        else return d.r * 2 *k; }});
   }
  
         let current_circle = undefined;
